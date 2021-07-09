@@ -1,0 +1,69 @@
+{
+  "name": "express-with-tdd",
+  "version": "1.0.0",
+  "description": "Express API with Test Driven Developement",
+  "main": "app.js",
+  "scripts": {
+    "start": "node index",
+    "dev": "npx nodemon index",
+    "test": "jest --watchAll",
+    "lint": "eslint ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ObothA/express-with-TDD.git"
+  },
+  "keywords": [
+    "Test",
+    "Driven",
+    "Development"
+  ],
+  "author": "Oboth Abel",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ObothA/express-with-TDD/issues"
+  },
+  "homepage": "https://github.com/ObothA/express-with-TDD#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "eslint": "^7.30.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^3.4.0",
+    "jest": "^27.0.6",
+    "nodemon": "^2.0.10",
+    "prettier": "^2.3.2",
+    "supertest": "^6.1.3"
+  },
+  "eslintConfig": {
+    "parserOptions": {
+      "ecmaVersion": 6
+    },
+    "extends": [
+      "eslint:recommended",
+      "plugin:prettier/recommended"
+    ],
+    "plugins": [
+      "prettier"
+    ],
+    "env": {
+      "node": true,
+      "es6": true,
+      "jest": true
+    },
+    "rules": {
+      "semi": "warn",
+      "quotes": [
+        "warn",
+        "single"
+      ],
+      "prettier/prettier": "warn",
+      "eqeqeq": "warn"
+    }
+  },
+  "prettier": {
+    "singleQuote": true,
+    "printWidth": 120
+  }
+}
