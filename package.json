@@ -25,7 +25,9 @@
   },
   "homepage": "https://github.com/ObothA/express-with-TDD#readme",
   "dependencies": {
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "sequelize": "^6.6.5",
+    "sqlite3": "^5.0.2"
   },
   "devDependencies": {
     "eslint": "^7.30.0",
