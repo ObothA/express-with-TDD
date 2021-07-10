@@ -14,7 +14,15 @@ router.post(
     .isLength({ min: 4, max: 32 })
     .withMessage('Must have min 4 and max 32 characters'),
   check('email').notEmpty().withMessage('E-mail cannot be null').bail().isEmail().withMessage('E-mail is not valid'),
-  check('password').notEmpty().withMessage('password cannot be null'),
+  check('password')
+    .notEmpty()
+    .withMessage('password cannot be null')
+    .bail()
+    .isLength({ min: 6 })
+    .withMessage('password must be at least 6 characters.')
+    .bail()
+    .matches(/^(?:(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).*)$/)
+    .withMessage('password must have at least 1 uppercase, 1 lowercase and 1 number.'),
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {

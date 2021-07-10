@@ -88,13 +88,22 @@ describe('User Registration', () => {
 
   // dynamic test
   it.each`
-    field         | value             | expectedMessage
-    ${'username'} | ${null}           | ${'username cannot be null'}
-    ${'username'} | ${'usr'}          | ${'Must have min 4 and max 32 characters'}
-    ${'username'} | ${'a'.repeat(33)} | ${'Must have min 4 and max 32 characters'}
-    ${'email'}    | ${null}           | ${'E-mail cannot be null'}
-    ${'email'}    | ${'mail.com'}     | ${'E-mail is not valid'}
-    ${'password'} | ${null}           | ${'password cannot be null'}
+    field         | value              | expectedMessage
+    ${'username'} | ${null}            | ${'username cannot be null'}
+    ${'username'} | ${'usr'}           | ${'Must have min 4 and max 32 characters'}
+    ${'username'} | ${'a'.repeat(33)}  | ${'Must have min 4 and max 32 characters'}
+    ${'email'}    | ${null}            | ${'E-mail cannot be null'}
+    ${'email'}    | ${'mail.com'}      | ${'E-mail is not valid'}
+    ${'email'}    | ${'user.mail.com'} | ${'E-mail is not valid'}
+    ${'email'}    | ${'user@mail'}     | ${'E-mail is not valid'}
+    ${'password'} | ${null}            | ${'password cannot be null'}
+    ${'password'} | ${'P4ssw'}         | ${'password must be at least 6 characters.'}
+    ${'password'} | ${'alllowercase'}  | ${'password must have at least 1 uppercase, 1 lowercase and 1 number.'}
+    ${'password'} | ${'ALLUPPERCASE'}  | ${'password must have at least 1 uppercase, 1 lowercase and 1 number.'}
+    ${'password'} | ${'12345678'}      | ${'password must have at least 1 uppercase, 1 lowercase and 1 number.'}
+    ${'password'} | ${'lowerandUPPER'} | ${'password must have at least 1 uppercase, 1 lowercase and 1 number.'}
+    ${'password'} | ${'lowerand12345'} | ${'password must have at least 1 uppercase, 1 lowercase and 1 number.'}
+    ${'password'} | ${'UPPERAND12345'} | ${'password must have at least 1 uppercase, 1 lowercase and 1 number.'}
   `('Returns $expectedMessage when $field is $value', async ({ field, expectedMessage, value }) => {
     const user = {
       username: 'user1',
