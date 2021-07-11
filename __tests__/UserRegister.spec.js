@@ -1,4 +1,5 @@
 const request = require('supertest');
+const nodeMailerStub = require('nodemailer-stub');
 
 const app = require('../src/app');
 const User = require('../src/user/User');
@@ -190,5 +191,22 @@ describe('User Registration', () => {
     const users = await User.findAll();
     const savedUser = users[0];
     expect(savedUser.inactive).toBe(true);
+  });
+
+  it('Creates an activationToken for user', async () => {
+    await postUser();
+    const users = await User.findAll();
+    const savedUser = users[0];
+    expect(savedUser.activationToken).toBeTruthy();
+  });
+
+  it('Sends an Account activation email with activationToken', async () => {
+    await postUser();
+    const lastMail = nodeMailerStub.interactsWithMail.lastMail();
+    expect(lastMail.to).toContain(validUser.email); // to is an array, so we check if array has email
+
+    const users = await User.findAll();
+    const savedUser = users[0];
+    expect(lastMail.content).toContain(savedUser.activationToken);
   });
 });
