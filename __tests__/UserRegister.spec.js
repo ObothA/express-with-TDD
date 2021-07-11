@@ -3,7 +3,6 @@ const request = require('supertest');
 const app = require('../src/app');
 const User = require('../src/user/User');
 const sequelize = require('../src/config/database');
-const { describe } = require('../src/user/User');
 
 beforeAll(() => {
   return sequelize.sync();
