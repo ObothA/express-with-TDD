@@ -1,7 +1,8 @@
 const express = require('express');
 const { check, validationResult } = require('express-validator');
 
-const { save } = require('./userService');
+const User = require('./User');
+const { save, findByEmail } = require('./userService');
 
 const router = express.Router();
 
@@ -13,7 +14,19 @@ router.post(
     .bail()
     .isLength({ min: 4, max: 32 })
     .withMessage('Must have min 4 and max 32 characters'),
-  check('email').notEmpty().withMessage('E-mail cannot be null').bail().isEmail().withMessage('E-mail is not valid'),
+  check('email')
+    .notEmpty()
+    .withMessage('E-mail cannot be null')
+    .bail()
+    .isEmail()
+    .withMessage('E-mail is not valid')
+    .bail()
+    .custom(async (email) => {
+      const user = await findByEmail(email);
+      if (user) {
+        throw new Error('E-mail already in use.');
+      }
+    }),
   check('password')
     .notEmpty()
     .withMessage('password cannot be null')
@@ -30,7 +43,6 @@ router.post(
       errors.array().forEach((error) => (validationErrors[error.param] = error.msg));
       return res.status(400).send({ validationErrors });
     }
-
     await save(req.body);
 
     return res.send({
