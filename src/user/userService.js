@@ -3,10 +3,12 @@ const bcrypt = require('bcrypt');
 const User = require('./User');
 
 const save = async (body) => {
-  const hash = await bcrypt.hash(body.password, 10);
+  const { username, email, password } = body;
 
+  const hash = await bcrypt.hash(password, 10);
   const user = {
-    ...body,
+    username,
+    email,
     password: hash,
   };
 

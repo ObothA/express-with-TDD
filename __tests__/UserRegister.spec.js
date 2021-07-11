@@ -173,4 +173,22 @@ describe('User Registration', () => {
     const { body } = response;
     expect(Object.keys(body.validationErrors)).toEqual(['username', 'email']);
   });
+
+  it('Creates a user in inactive mode', async () => {
+    await postUser();
+    const users = await User.findAll();
+    const savedUser = users[0];
+    expect(savedUser.inactive).toBe(true);
+  });
+
+  it('Creates a user in inactive mode even when body contains inactive as false', async () => {
+    const newUser = {
+      ...validUser,
+      inactive: false,
+    };
+    await postUser(newUser);
+    const users = await User.findAll();
+    const savedUser = users[0];
+    expect(savedUser.inactive).toBe(true);
+  });
 });
