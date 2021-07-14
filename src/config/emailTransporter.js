@@ -1,6 +1,11 @@
 const nodeMailer = require('nodemailer');
-const nodeMailerStub = require('nodemailer-stub');
 
-const transporter = nodeMailer.createTransport(nodeMailerStub.stubTransport);
+const transporter = nodeMailer.createTransport({
+  host: 'localhost',
+  port: 8587,
+  tls: {
+    rejectUnauthorized: false,
+  },
+});
 
 module.exports = transporter;

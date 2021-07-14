@@ -1,8 +1,8 @@
 const express = require('express');
 const { check, validationResult } = require('express-validator');
 
-const User = require('./User');
-const { save, findByEmail } = require('./userService');
+// const User = require('./User');
+const { saveUser, findByEmail } = require('./userService');
 
 const router = express.Router();
 
@@ -43,11 +43,15 @@ router.post(
       errors.array().forEach((error) => (validationErrors[error.param] = error.msg));
       return res.status(400).send({ validationErrors });
     }
-    await save(req.body);
 
-    return res.send({
-      message: 'User created.',
-    });
+    try {
+      await saveUser(req.body);
+      return res.send({
+        message: 'User created.',
+      });
+    } catch (catchErr) {
+      return res.status(502).send({ message: catchErr.message });
+    }
   }
 );
 

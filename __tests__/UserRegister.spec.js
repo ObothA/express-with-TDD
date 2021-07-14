@@ -1,17 +1,46 @@
 const request = require('supertest');
-const nodeMailerStub = require('nodemailer-stub');
+const { SMTPServer } = require('smtp-server');
 
 const app = require('../src/app');
 const User = require('../src/user/User');
 const sequelize = require('../src/config/database');
 
-beforeAll(() => {
-  return sequelize.sync();
+let lastMail, mailServer;
+let simulateSmtpFailure = false;
+
+beforeAll(async () => {
+  mailServer = new SMTPServer({
+    authOptional: true,
+    onData(stream, session, callback) {
+      let mailBody;
+      stream.on('data', (data) => {
+        mailBody += data.toString();
+      });
+      stream.on('end', () => {
+        if (simulateSmtpFailure) {
+          const err = new Error('Invalid mailbox');
+          err.ResponseCode = 553;
+          return callback(err);
+        }
+        lastMail = mailBody;
+        callback();
+      });
+    },
+  });
+
+  await mailServer.listen(8587, 'localhost');
+
+  await sequelize.sync();
 });
 
 beforeEach(() => {
+  simulateSmtpFailure = false;
   /** Clear the table before each test */
   return User.destroy({ truncate: true });
+});
+
+afterAll(async () => {
+  await mailServer.close();
 });
 
 const validUser = {
@@ -125,38 +154,6 @@ describe('User Registration', () => {
     expect(body.validationErrors[field]).toBe(expectedMessage);
   });
 
-  /*
-  it('Returns username cannot be null when username is null', async () => {
-    const response = await postUser({
-      username: null,
-      email: 'user1@mail.com',
-      password: 'P4ssword',
-    });
-    const body = response.body;
-    expect(body.validationErrors.username).toBe('username cannot be null');
-  });
-
-  it('Returns E-mail cannot be null when email is null', async () => {
-    const response = await postUser({
-      username: 'user1',
-      email: null,
-      password: 'P4ssword',
-    });
-    const body = response.body;
-    expect(body.validationErrors.email).toBe('E-mail cannot be null');
-  });
-
-  it('Returns password cannot be null when a null password is provided', async () => {
-    const response = await postUser({
-      username: 'user1',
-      email: 'user1@mail.com',
-      password: null,
-    });
-    const body = response.body;
-    expect(body.validationErrors.password).toBe('password cannot be null');
-  });
-*/
-
   const email_in_use = 'E-mail already in use.';
   it(`Returns ${email_in_use} when email is already in use.`, async () => {
     await User.create({ ...validUser });
@@ -202,11 +199,31 @@ describe('User Registration', () => {
 
   it('Sends an Account activation email with activationToken', async () => {
     await postUser();
-    const lastMail = nodeMailerStub.interactsWithMail.lastMail();
-    expect(lastMail.to).toContain(validUser.email); // to is an array, so we check if array has email
 
     const users = await User.findAll();
     const savedUser = users[0];
-    expect(lastMail.content).toContain(savedUser.activationToken);
+
+    expect(lastMail).toContain('user1@mail.com');
+    expect(lastMail).toContain(savedUser.activationToken);
+  });
+
+  it('Returns 502 Bad Gateway when sending email fails', async () => {
+    simulateSmtpFailure = true;
+    const response = await postUser();
+    expect(response.status).toBe(502);
+  });
+
+  it('Returns email failure message when sending email fails.', async () => {
+    simulateSmtpFailure = true;
+    const response = await postUser();
+    expect(response.body.message).toBe('E-mail failure.');
+  });
+
+  it('Doesnt save user to database if activation fails.', async () => {
+    simulateSmtpFailure = true;
+    await postUser();
+
+    const users = await User.findAll();
+    expect(users.length).toBe(0);
   });
 });
