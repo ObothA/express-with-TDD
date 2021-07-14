@@ -4,6 +4,7 @@ const { SMTPServer } = require('smtp-server');
 const app = require('../src/app');
 const User = require('../src/user/User');
 const sequelize = require('../src/config/database');
+const { post } = require('../src/user/userRouter');
 
 let lastMail, mailServer;
 let simulateSmtpFailure = false;
@@ -225,5 +226,27 @@ describe('User Registration', () => {
 
     const users = await User.findAll();
     expect(users.length).toBe(0);
+  });
+});
+
+describe('Account activation', () => {
+  it('Activates the account when correct token is sent', async () => {
+    await postUser();
+    let users = await User.findAll();
+    const token = users[0].activationToken;
+
+    await request(app).post(`/api/1.0/users/token/${token}`).send();
+    users = await User.findAll();
+    expect(users[0].inactive).toBe(false);
+  });
+
+  it('Removes token from the user table after activation.', async () => {
+    await postUser();
+    let users = await User.findAll();
+    const token = users[0].activationToken;
+
+    await request(app).post(`/api/1.0/users/token/${token}`).send();
+    users = await User.findAll();
+    expect(users[0].activationToken).toBeFalsy();
   });
 });

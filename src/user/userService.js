@@ -40,4 +40,11 @@ const findByEmail = async (email) => {
   return await User.findOne({ where: { email } });
 };
 
-module.exports = { saveUser, findByEmail };
+const activate = async (token) => {
+  const user = await User.findOne({ where: { activationToken: token } });
+  user.inactive = false;
+  user.activationToken = null;
+  await user.save();
+};
+
+module.exports = { saveUser, findByEmail, activate };

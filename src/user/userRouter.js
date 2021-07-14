@@ -1,8 +1,9 @@
 const express = require('express');
 const { check, validationResult } = require('express-validator');
+const { route } = require('../app');
 
 // const User = require('./User');
-const { saveUser, findByEmail } = require('./userService');
+const { saveUser, findByEmail, activate } = require('./userService');
 
 const router = express.Router();
 
@@ -54,5 +55,11 @@ router.post(
     }
   }
 );
+
+router.post('/api/1.0/users/token/:activationToken', async (req, res) => {
+  const token = req.params.activationToken;
+  await activate(token);
+  res.send();
+});
 
 module.exports = router;
