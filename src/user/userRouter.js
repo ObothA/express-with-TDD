@@ -2,7 +2,7 @@ const express = require('express');
 const { check, validationResult } = require('express-validator');
 
 // const User = require('./User');
-const { saveUser, findByEmail, activate, getUsers } = require('./userService');
+const { saveUser, findByEmail, activate, getUsers, getUser } = require('./userService');
 const ValidationException = require('../error/ValidationException');
 const pagination = require('../middleware/pagination');
 
@@ -69,6 +69,15 @@ router.get('/api/1.0/users', pagination, async (req, res, next) => {
   const { page, size } = req.pagination;
   const users = await getUsers(page, size);
   res.send(users);
+});
+
+router.get('/api/1.0/users/:id', async (req, res, next) => {
+  try {
+    const user = await getUser(req.params.id);
+    res.send(user);
+  } catch (catchErr) {
+    next(catchErr);
+  }
 });
 
 module.exports = router;

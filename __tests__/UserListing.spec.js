@@ -108,3 +108,64 @@ describe('Listing Users.', () => {
     expect(response.body.page).toBe(0);
   });
 });
+
+describe('Get User', () => {
+  const getUser = async (id = 5) => {
+    return request(app).get(`/api/1.0/users/${id}`);
+  };
+
+  it('Returns 404 when user is not found', async () => {
+    const response = await getUser();
+    expect(response.status).toBe(404);
+  });
+  it.each`
+    language | message
+    ${'en'}  | ${'User not found.'}
+  `('Returns $message for unknown user when language is set to  $language', async ({ language, message }) => {
+    const response = await request(app).get('/api/1.0/users/5').set('Accept-Language', language);
+    expect(response.body.message).toBe(message);
+  });
+
+  it('Returns a proper body when user not found.', async () => {
+    const nowInMilliseconds = new Date().getTime();
+    const response = await getUser();
+    const error = response.body;
+
+    expect(error.path).toBe('/api/1.0/users/5');
+    expect(error.timestamp).toBeGreaterThan(nowInMilliseconds);
+    expect(Object.keys(error)).toEqual(['path', 'timestamp', 'message']);
+  });
+
+  it('Returns 200 OK when an active user exists', async () => {
+    const user = await User.create({
+      username: 'user1',
+      email: 'user1@mail.com',
+      inactive: false,
+    });
+
+    const response = await getUser(user.id);
+    expect(response.status).toBe(200);
+  });
+
+  it('Returns id, username and email when an active user exists', async () => {
+    const user = await User.create({
+      username: 'user1',
+      email: 'user1@mail.com',
+      inactive: false,
+    });
+
+    const response = await getUser(user.id);
+    expect(Object.keys(response.body)).toEqual(['id', 'username', 'email']);
+  });
+
+  it('Returns 404 when the user is inactive.', async () => {
+    const user = await User.create({
+      username: 'user1',
+      email: 'user1@mail.com',
+      inactive: true,
+    });
+
+    const response = await getUser(user.id);
+    expect(response.status).toBe(404);
+  });
+});

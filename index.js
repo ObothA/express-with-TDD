@@ -21,4 +21,4 @@ sequelize.sync({ force: true }).then(async () => {
   await addUsers(25);
 });
 
-app.listen(3000, () => console.log('App is running!'));
+app.listen(5000, () => console.log('App is running!'));
