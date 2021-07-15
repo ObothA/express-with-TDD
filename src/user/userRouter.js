@@ -70,7 +70,12 @@ router.get('/api/1.0/users', async (req, res, next) => {
     page = 0;
   }
 
-  const users = await getUsers(page);
+  let size = req.query.size ? Number.parseInt(req.query.size) : 10;
+  if (size > 10) {
+    size = 10;
+  }
+
+  const users = await getUsers(page, size);
   res.send(users);
 });
 

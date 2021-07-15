@@ -37,20 +37,19 @@ const saveUser = async (body) => {
   }
 };
 
-const getUsers = async (page) => {
-  const pageSize = 10;
+const getUsers = async (page, size) => {
   const usersWithCount = await User.findAndCountAll({
     where: { inactive: false },
     attributes: ['id', 'username', 'email'],
-    limit: pageSize,
-    offset: page * pageSize, // to find starting point, offset the staring point by the result here
+    limit: size,
+    offset: page * size, // to find starting point, offset the staring point by the result here
   });
 
   return {
     content: usersWithCount.rows,
     page,
-    size: 10,
-    totalPages: Math.ceil(usersWithCount.count / pageSize),
+    size: Number.parseInt(size),
+    totalPages: Math.ceil(usersWithCount.count / size),
   };
 };
 

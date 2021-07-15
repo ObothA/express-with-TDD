@@ -76,7 +76,20 @@ describe('Listing Users.', () => {
   it('Returns first page when page is set below zero as request paramter.', async () => {
     await addUsers(11);
     const response = await getUsers().query({ page: -5 });
-    expect(response.body.content[0].username).toBe('user11');
     expect(response.body.page).toBe(0);
+  });
+
+  it('Returns 5 users and corresponding size indicator when size is set as to 5 in parameter.', async () => {
+    await addUsers(11);
+    const response = await getUsers().query({ size: 5 });
+    expect(response.body.content.length).toBe(5);
+    expect(response.body.size).toBe(5);
+  });
+
+  it('Returns 10 users and corresponding size indicator when size is set as to 1000 in parameter.', async () => {
+    await addUsers(11);
+    const response = await getUsers().query({ size: 1000 });
+    expect(response.body.content.length).toBe(10);
+    expect(response.body.size).toBe(10);
   });
 });
