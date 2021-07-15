@@ -4,6 +4,7 @@ const { check, validationResult } = require('express-validator');
 // const User = require('./User');
 const { saveUser, findByEmail, activate, getUsers } = require('./userService');
 const ValidationException = require('../error/ValidationException');
+const pagination = require('../middleware/pagination');
 
 const router = express.Router();
 
@@ -64,17 +65,8 @@ router.post('/api/1.0/users/token/:activationToken', async (req, res, next) => {
   }
 });
 
-router.get('/api/1.0/users', async (req, res, next) => {
-  let page = req.query.page ? Number.parseInt(req.query.page) : 0;
-  if (page < 0) {
-    page = 0;
-  }
-
-  let size = req.query.size ? Number.parseInt(req.query.size) : 10;
-  if (size > 10) {
-    size = 10;
-  }
-
+router.get('/api/1.0/users', pagination, async (req, res, next) => {
+  const { page, size } = req.pagination;
   const users = await getUsers(page, size);
   res.send(users);
 });
