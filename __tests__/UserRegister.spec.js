@@ -4,7 +4,7 @@ const { SMTPServer } = require('smtp-server');
 const app = require('../src/app');
 const User = require('../src/user/User');
 const sequelize = require('../src/config/database');
-const { post } = require('../src/user/userRouter');
+const { describe } = require('../src/user/User');
 
 let lastMail, mailServer;
 let simulateSmtpFailure = false;
@@ -227,6 +227,15 @@ describe('User Registration', () => {
     const users = await User.findAll();
     expect(users.length).toBe(0);
   });
+
+  it('Returns validation failure message in error response body when validation fails', async () => {
+    const response = await postUser({
+      username: null,
+      email: validUser.email,
+      password: 'whjddPwh2',
+    });
+    expect(response.body.message).toBe('validation failure');
+  });
 });
 
 describe('Account activation', () => {
@@ -267,3 +276,14 @@ describe('Account activation', () => {
     expect(response.status).toBe(400);
   });
 });
+
+// describe('Error Model', () => {
+//   it('Returns path, timestamp, message and validation errors when validation fails.', async () => {
+//     const response = await postUser({
+//       ...validUser,
+//       username: null,
+//     });
+//     const { body } = response;
+//     expect(Object.keys(body)).toEqual(['path', 'timestamp', 'message', 'validationErrors']);
+//   });
+// });
