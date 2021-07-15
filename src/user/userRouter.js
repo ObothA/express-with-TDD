@@ -2,7 +2,7 @@ const express = require('express');
 const { check, validationResult } = require('express-validator');
 
 // const User = require('./User');
-const { saveUser, findByEmail, activate } = require('./userService');
+const { saveUser, findByEmail, activate, getUsers } = require('./userService');
 const ValidationException = require('../error/ValidationException');
 
 const router = express.Router();
@@ -62,6 +62,11 @@ router.post('/api/1.0/users/token/:activationToken', async (req, res, next) => {
   } catch (CatchError) {
     next(CatchError);
   }
+});
+
+router.get('/api/1.0/users', async (req, res, next) => {
+  const users = await getUsers();
+  res.send(users);
 });
 
 module.exports = router;

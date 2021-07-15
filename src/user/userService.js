@@ -37,6 +37,15 @@ const saveUser = async (body) => {
   }
 };
 
+const getUsers = async () => {
+  return {
+    content: [],
+    page: 0,
+    size: 10,
+    totalPages: 0,
+  };
+};
+
 const findByEmail = async (email) => {
   return await User.findOne({ where: { email } });
 };
@@ -53,4 +62,4 @@ const activate = async (token) => {
   await user.save();
 };
 
-module.exports = { saveUser, findByEmail, activate };
+module.exports = { saveUser, findByEmail, activate, getUsers };
