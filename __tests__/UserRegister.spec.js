@@ -4,7 +4,6 @@ const { SMTPServer } = require('smtp-server');
 const app = require('../src/app');
 const User = require('../src/user/User');
 const sequelize = require('../src/config/database');
-const { describe } = require('../src/user/User');
 
 let lastMail, mailServer;
 let simulateSmtpFailure = false;
@@ -277,13 +276,40 @@ describe('Account activation', () => {
   });
 });
 
-// describe('Error Model', () => {
-//   it('Returns path, timestamp, message and validation errors when validation fails.', async () => {
-//     const response = await postUser({
-//       ...validUser,
-//       username: null,
-//     });
-//     const { body } = response;
-//     expect(Object.keys(body)).toEqual(['path', 'timestamp', 'message', 'validationErrors']);
-//   });
-// });
+describe('Error Model', () => {
+  it('Returns path, timestamp, message and validation errors when validation fails.', async () => {
+    const response = await postUser({
+      ...validUser,
+      username: null,
+    });
+    const body = response.body;
+    expect(Object.keys(body)).toEqual(['path', 'timestamp', 'message', 'validationErrors']);
+  });
+
+  it('Returns path, timestamp, message in response when request fails other than validation errorr.', async () => {
+    const token = 'this-token-does-not-exist';
+
+    const response = await request(app).post(`/api/1.0/users/token/${token}`).send();
+    const body = response.body;
+    expect(Object.keys(body)).toEqual(['path', 'timestamp', 'message']);
+  });
+
+  it('Returns path in error object.', async () => {
+    const token = 'this-token-does-not-exist';
+
+    const response = await request(app).post(`/api/1.0/users/token/${token}`).send();
+    const body = response.body;
+    expect(body.path).toEqual(`/api/1.0/users/token/${token}`);
+  });
+
+  it('Returns timestamp in milliseconds withing 5 seconds value in error body', async () => {
+    const nowInMills = new Date().getTime();
+    const fiveSecondsLater = nowInMills + 5 * 1000;
+    const token = 'this-token-does-not-exist';
+
+    const response = await request(app).post(`/api/1.0/users/token/${token}`).send();
+    const body = response.body;
+    expect(body.timestamp).toBeGreaterThan(nowInMills);
+    expect(body.timestamp).toBeLessThan(fiveSecondsLater);
+  });
+});
