@@ -72,4 +72,11 @@ describe('Listing Users.', () => {
 
     expect(body.totalPages).toBe(2);
   });
+
+  it('Returns first page when page is set below zero as request paramter.', async () => {
+    await addUsers(11);
+    const response = await getUsers().query({ page: -5 });
+    expect(response.body.content[0].username).toBe('user11');
+    expect(response.body.page).toBe(0);
+  });
 });
