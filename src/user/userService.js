@@ -38,11 +38,18 @@ const saveUser = async (body) => {
 };
 
 const getUsers = async () => {
+  const pageSize = 10;
+  const users = await User.findAll({
+    where: { inactive: false },
+    attributes: ['id', 'username', 'email'],
+    limit: pageSize,
+  });
+  const count = await User.count({ where: { inactive: false } });
   return {
-    content: [],
+    content: users,
     page: 0,
     size: 10,
-    totalPages: 0,
+    totalPages: Math.ceil(count / pageSize),
   };
 };
 
