@@ -3,6 +3,7 @@ const { check, validationResult } = require('express-validator');
 
 // const User = require('./User');
 const { saveUser, findByEmail, activate } = require('./userService');
+const ValidationException = require('../error/ValidationException');
 
 const router = express.Router();
 
@@ -36,12 +37,10 @@ router.post(
     .bail()
     .matches(/^(?:(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).*)$/)
     .withMessage('password must have at least 1 uppercase, 1 lowercase and 1 number.'),
-  async (req, res) => {
+  async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      const validationErrors = {};
-      errors.array().forEach((error) => (validationErrors[error.param] = error.msg));
-      return res.status(400).send({ validationErrors });
+      return next(new ValidationException(errors.array()));
     }
 
     try {
@@ -50,19 +49,19 @@ router.post(
         message: 'User created.',
       });
     } catch (catchErr) {
-      return res.status(502).send({ message: catchErr.message });
+      next(catchErr);
     }
   }
 );
 
-router.post('/api/1.0/users/token/:activationToken', async (req, res) => {
+router.post('/api/1.0/users/token/:activationToken', async (req, res, next) => {
   const token = req.params.activationToken;
   try {
     await activate(token);
-  } catch (error) {
-    return res.status(400).send();
+    return res.send({ message: 'Account activated successfully.' });
+  } catch (CatchError) {
+    next(CatchError);
   }
-  res.send();
 });
 
 module.exports = router;
