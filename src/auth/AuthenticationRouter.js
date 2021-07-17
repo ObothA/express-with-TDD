@@ -4,7 +4,7 @@ const { check, validationResult } = require('express-validator');
 
 const { findByEmail } = require('../user/userService');
 const AuthenticationException = require('./AuthenticationException');
-const ForbidenException = require('./ForbidenException');
+const ForbidenException = require('../error/ForbidenException');
 
 const router = express.Router();
 

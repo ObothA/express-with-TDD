@@ -1,9 +1,11 @@
 const express = require('express');
 const { check, validationResult } = require('express-validator');
+const bcrypt = require('bcrypt');
 
 // const User = require('./User');
 const { saveUser, findByEmail, activate, getUsers, getUser } = require('./userService');
 const ValidationException = require('../error/ValidationException');
+const ForbidenException = require('../error/ForbidenException');
 const pagination = require('../middleware/pagination');
 
 const router = express.Router();
@@ -78,6 +80,38 @@ router.get('/api/1.0/users/:id', async (req, res, next) => {
   } catch (catchErr) {
     next(catchErr);
   }
+});
+
+router.put('/api/1.0/users/:id', async (req, res, next) => {
+  const { authorization } = req.headers;
+  if (authorization) {
+    const encoded = authorization.substring(6);
+    const decoded = Buffer.from(encoded, 'base64').toString('ascii');
+    const [email, password] = decoded.split(':');
+    const user = await findByEmail(email);
+
+    if (!user) {
+      return next(new ForbidenException('You are not authorized to update user.'));
+    }
+
+    // eslint-disable-next-line eqeqeq
+    if (user.id != req.params.id) {
+      return next(new ForbidenException('You are not authorized to update user.'));
+    }
+
+    if (user.inactive) {
+      return next(new ForbidenException('You are not authorized to update user.'));
+    }
+
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
+      return next(new ForbidenException('You are not authorized to update user.'));
+    }
+
+    return res.send();
+  }
+
+  return next(new ForbidenException('You are not authorized to update user.'));
 });
 
 module.exports = router;
