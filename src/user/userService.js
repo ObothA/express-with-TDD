@@ -1,5 +1,6 @@
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
+const Sequelize = require('sequelize');
 
 const User = require('./User');
 const { sendAccountActivation } = require('../email/EmailService');
@@ -38,9 +39,16 @@ const saveUser = async (body) => {
   }
 };
 
-const getUsers = async (page, size) => {
+const getUsers = async (page, size, authenticatedUser) => {
+  const id = authenticatedUser ? authenticatedUser.id : 0; // id 0 doesnt belong to any user.
+
   const usersWithCount = await User.findAndCountAll({
-    where: { inactive: false },
+    where: {
+      inactive: false,
+      id: {
+        [Sequelize.Op.not]: id,
+      },
+    },
     attributes: ['id', 'username', 'email'],
     limit: size,
     offset: page * size, // to find starting point, offset the staring point by the result here
@@ -70,6 +78,17 @@ const getUser = async (id) => {
   return user;
 };
 
+const updateUser = async (id, updateBody) => {
+  const user = await User.findOne({
+    where: {
+      id,
+    },
+  });
+
+  user.username = updateBody.username;
+  user.save();
+};
+
 const findByEmail = async (email) => {
   return await User.findOne({ where: { email } });
 };
@@ -86,4 +105,4 @@ const activate = async (token) => {
   await user.save();
 };
 
-module.exports = { saveUser, findByEmail, activate, getUsers, getUser };
+module.exports = { saveUser, findByEmail, activate, getUsers, getUser, updateUser };
