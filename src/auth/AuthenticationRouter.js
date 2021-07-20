@@ -1,11 +1,11 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const { check, validationResult } = require('express-validator');
-const jwt = require('jsonwebtoken');
 
 const { findByEmail } = require('../user/userService');
 const AuthenticationException = require('./AuthenticationException');
 const ForbidenException = require('../error/ForbidenException');
+const { createToken } = require('./tokenService');
 
 const router = express.Router();
 
@@ -33,12 +33,10 @@ router.post('/api/1.0/auth', check('email').isEmail(), async (req, res, next) =>
     return next(new ForbidenException());
   }
 
-  const token = jwt.sign({ id: user.id }, 'this-is-our-secret');
-
   res.send({
     id: user.id,
     username: user.username,
-    token,
+    token: createToken(user),
   });
 });
 
