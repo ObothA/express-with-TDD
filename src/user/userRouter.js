@@ -6,7 +6,7 @@ const { saveUser, findByEmail, activate, getUsers, getUser, updateUser } = requi
 const ValidationException = require('../error/ValidationException');
 const ForbidenException = require('../error/ForbidenException');
 const pagination = require('../middleware/pagination');
-const basicAuthentication = require('../middleware/basicauthentication');
+const tokenAuthentication = require('../middleware/tokenAuthentication');
 
 const router = express.Router();
 
@@ -67,7 +67,7 @@ router.post('/api/1.0/users/token/:activationToken', async (req, res, next) => {
   }
 });
 
-router.get('/api/1.0/users', pagination, basicAuthentication, async (req, res, next) => {
+router.get('/api/1.0/users', pagination, tokenAuthentication, async (req, res, next) => {
   const authenticatedUser = req.authenticatedUser;
 
   const { page, size } = req.pagination;
@@ -84,7 +84,7 @@ router.get('/api/1.0/users/:id', async (req, res, next) => {
   }
 });
 
-router.put('/api/1.0/users/:id', basicAuthentication, async (req, res, next) => {
+router.put('/api/1.0/users/:id', tokenAuthentication, async (req, res, next) => {
   const authenticatedUser = req.authenticatedUser;
 
   // eslint-disable-next-line eqeqeq
