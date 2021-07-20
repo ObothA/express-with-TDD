@@ -134,4 +134,15 @@ describe('Authentication', () => {
     });
     expect(response.status).toBe(401);
   });
+
+  it('Returns token in responses body when credentials are correct.', async () => {
+    await addUser();
+    const response = await postAuthentication({
+      email: 'user1@mail.com',
+      password: 'password',
+    });
+
+    // expect(response.body.token).not.toBeUndefined();
+    expect(response.body.token).toBeTruthy();
+  });
 });
