@@ -98,4 +98,12 @@ const activate = async (token) => {
   await user.save();
 };
 
-module.exports = { saveUser, findByEmail, activate, getUsers, getUser, updateUser };
+const deleteUser = async (id) => {
+  await User.destroy({
+    where: {
+      id,
+    },
+  });
+};
+
+module.exports = { saveUser, findByEmail, activate, getUsers, getUser, updateUser, deleteUser };

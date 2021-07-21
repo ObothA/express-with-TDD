@@ -2,7 +2,7 @@ const express = require('express');
 const { check, validationResult } = require('express-validator');
 
 // const User = require('./User');
-const { saveUser, findByEmail, activate, getUsers, getUser, updateUser } = require('./userService');
+const { saveUser, findByEmail, activate, getUsers, getUser, updateUser, deleteUser } = require('./userService');
 const ValidationException = require('../error/ValidationException');
 const ForbidenException = require('../error/ForbidenException');
 const pagination = require('../middleware/pagination');
@@ -94,6 +94,19 @@ router.put('/api/1.0/users/:id', tokenAuthentication, async (req, res, next) => 
   await updateUser(req.params.id, req.body);
 
   return res.send();
+});
+
+router.delete('/api/1.0/users/:id', tokenAuthentication, async (req, res, next) => {
+  const authenticatedUser = req.authenticatedUser;
+
+  // eslint-disable-next-line eqeqeq
+  if (!authenticatedUser || authenticatedUser.id != req.params.id) {
+    return next(new ForbidenException('You are not authorized to delete user.'));
+  }
+
+  await deleteUser(req.params.id);
+
+  res.send();
 });
 
 module.exports = router;
