@@ -5,7 +5,7 @@ const { check, validationResult } = require('express-validator');
 const { findByEmail } = require('../user/userService');
 const AuthenticationException = require('./AuthenticationException');
 const ForbidenException = require('../error/ForbidenException');
-const { createToken } = require('./tokenService');
+const { createToken, deleteToken } = require('./tokenService');
 
 const router = express.Router();
 
@@ -33,11 +33,23 @@ router.post('/api/1.0/auth', check('email').isEmail(), async (req, res, next) =>
     return next(new ForbidenException());
   }
 
+  const token = await createToken(user);
+
   res.send({
     id: user.id,
     username: user.username,
-    token: createToken(user),
+    token,
   });
+});
+
+router.post('/api/1.0/logout', async (req, res) => {
+  const { authorization } = req.headers;
+  if (authorization) {
+    const token = authorization.substring(7);
+    await deleteToken(token);
+  }
+
+  res.send();
 });
 
 module.exports = router;

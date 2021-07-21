@@ -127,7 +127,7 @@ describe('Listing Users.', () => {
 
   it('Returns user page without logged in user when request has valid authorization.', async () => {
     await addUsers(11);
-    const token = auth({
+    const token = await auth({
       auth: {
         email: 'user1@mail.com',
         password: 'password',
