@@ -10,10 +10,14 @@ Token.init(
     token: {
       type: Sequelize.STRING,
     },
+    lastUsedAt: {
+      type: Sequelize.DATE,
+    },
   },
   {
     sequelize,
     modelName: 'token', // this also gives it the table name.
+    timestamps: false, // sequelize will not generate createdAt and updatedAt
   }
 );
 

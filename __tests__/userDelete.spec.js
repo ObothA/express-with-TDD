@@ -33,7 +33,6 @@ const auth = async (options = {}) => {
 
 const deleteUser = async (id = 5, options = {}) => {
   const agent = request(app).delete(`/api/1.0/users/${id}`);
-
   if (options.token) {
     agent.set('Authorization', `Bearer ${options.token}`);
   }
