@@ -35,8 +35,18 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   simulateSmtpFailure = false;
+
   /** Clear the table before each test */
-  await User.destroy({ truncate: true });
+
+  // Clear user table, sqlite specific
+  // await User.destroy({ truncate: true });
+
+  // Works for other mysql versions
+  await User.destroy({
+    truncate: {
+      cascade: true,
+    },
+  });
 });
 
 afterAll(async () => {

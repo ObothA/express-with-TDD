@@ -11,7 +11,16 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   // Clear user table
-  await User.destroy({ truncate: true });
+
+  // Clear user table, sqlite specific
+  // await User.destroy({ truncate: true });
+
+  // Works for other mysql versions
+  await User.destroy({
+    truncate: {
+      cascade: true,
+    },
+  });
 });
 
 const putUser = async (id = 5, body = null, options = {}) => {
