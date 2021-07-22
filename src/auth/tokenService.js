@@ -49,4 +49,16 @@ const deleteTokensOfUser = async (userId) => {
   });
 };
 
-module.exports = { createToken, verifyToken, deleteToken, deleteTokensOfUser };
+const scheduledCleanUp = async () => {
+  //prettier-ignore
+  const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  await Token.destroy({
+    where: {
+      lastUsedAt: {
+        [Sequelize.Op.lt]: oneWeekAgo,
+      },
+    },
+  });
+};
+
+module.exports = { createToken, verifyToken, deleteToken, deleteTokensOfUser, scheduledCleanUp };
