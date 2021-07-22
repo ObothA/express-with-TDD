@@ -3,6 +3,8 @@ const Sequelize = require('sequelize');
 
 const { randomString } = require('../shared/generator');
 
+const ONE_WEEK_IN_MILLISECONDS = 7 * 24 * 60 * 60 * 1000;
+
 const createToken = async (user) => {
   const token = randomString(32);
   await Token.create({
@@ -16,7 +18,7 @@ const createToken = async (user) => {
 
 const verifyToken = async (token) => {
   //prettier-ignore
-  const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const oneWeekAgo = new Date(Date.now() - ONE_WEEK_IN_MILLISECONDS);
   const tokenInDB = await Token.findOne({
     where: {
       token,
@@ -49,16 +51,18 @@ const deleteTokensOfUser = async (userId) => {
   });
 };
 
-const scheduledCleanUp = async () => {
-  //prettier-ignore
-  const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  await Token.destroy({
-    where: {
-      lastUsedAt: {
-        [Sequelize.Op.lt]: oneWeekAgo,
+const scheduledCleanUp = () => {
+  setInterval(async () => {
+    //prettier-ignore
+    const oneWeekAgo = new Date(Date.now() - ONE_WEEK_IN_MILLISECONDS);
+    await Token.destroy({
+      where: {
+        lastUsedAt: {
+          [Sequelize.Op.lt]: oneWeekAgo,
+        },
       },
-    },
-  });
+    });
+  }, 60 * 60 * 1000);
 };
 
 module.exports = { createToken, verifyToken, deleteToken, deleteTokensOfUser, scheduledCleanUp };
