@@ -6,6 +6,7 @@ const { saveUser, findByEmail, activate, getUsers, getUser, updateUser, deleteUs
 const ValidationException = require('../error/ValidationException');
 const ForbidenException = require('../error/ForbidenException');
 const pagination = require('../middleware/pagination');
+const NotFoundException = require('../error/NotFoundException');
 
 const router = express.Router();
 
@@ -106,6 +107,15 @@ router.delete('/api/1.0/users/:id', async (req, res, next) => {
   await deleteUser(req.params.id);
 
   res.send();
+});
+
+router.post('/api/1.0/password-reset', check('email').isEmail().withMessage('E-mail is not valid.'), (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    throw new ValidationException(errors.array());
+  }
+
+  throw new NotFoundException('E-mail not found.');
 });
 
 module.exports = router;

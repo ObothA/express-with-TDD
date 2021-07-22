@@ -6,7 +6,7 @@ const { sendAccountActivation } = require('../email/EmailService');
 const sequelize = require('../config/database');
 const EmailException = require('../email/EmailException');
 const InvalidTokenException = require('./invalidTokenException');
-const UserNotFoundException = require('./UserNotFoundException');
+const NotFoundException = require('../error/NotFoundException');
 const { randomString } = require('../shared/generator');
 
 const saveUser = async (body) => {
@@ -65,7 +65,7 @@ const getUser = async (id) => {
   });
 
   if (!user) {
-    throw new UserNotFoundException();
+    throw new NotFoundException('User not found.');
   }
 
   return user;
