@@ -142,4 +142,32 @@ describe('User Delete.', () => {
 
     expect(tokenInDB).toBeNull();
   });
+
+  it('Deletes all tokens from database when delete user request sent from authrorized user.', async () => {
+    const savedUser = await addUser();
+
+    const token1 = await auth({
+      auth: {
+        email: 'user1@mail.com',
+        password: 'password',
+      },
+    });
+
+    const token2 = await auth({
+      auth: {
+        email: 'user1@mail.com',
+        password: 'password',
+      },
+    });
+
+    await deleteUser(savedUser.id, { token: token1 });
+
+    const tokenInDB = await Token.findOne({
+      where: {
+        token: token2,
+      },
+    });
+
+    expect(tokenInDB).toBeNull();
+  });
 });

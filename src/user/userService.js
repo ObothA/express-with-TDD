@@ -8,6 +8,7 @@ const EmailException = require('../email/EmailException');
 const InvalidTokenException = require('./invalidTokenException');
 const UserNotFoundException = require('./UserNotFoundException');
 const { randomString } = require('../shared/generator');
+const { deleteTokensOfUser } = require('../auth/tokenService');
 
 const saveUser = async (body) => {
   const { username, email, password } = body;
@@ -104,6 +105,7 @@ const deleteUser = async (id) => {
       id,
     },
   });
+  await deleteTokensOfUser(id);
 };
 
 module.exports = { saveUser, findByEmail, activate, getUsers, getUser, updateUser, deleteUser };
