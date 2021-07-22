@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 
 const app = require('../src/app');
 const User = require('../src/user/User');
+const Token = require('../src/auth/Token');
 const sequelize = require('../src/config/database');
 
 beforeAll(async () => {
@@ -119,5 +120,26 @@ describe('User Delete.', () => {
     });
 
     expect(inDBUser).toBeNull();
+  });
+
+  it('Deletes token from database when delete user request sent from authrorized user.', async () => {
+    const savedUser = await addUser();
+
+    const token = await auth({
+      auth: {
+        email: 'user1@mail.com',
+        password: 'password',
+      },
+    });
+
+    await deleteUser(savedUser.id, { token });
+
+    const tokenInDB = await Token.findOne({
+      where: {
+        token,
+      },
+    });
+
+    expect(tokenInDB).toBeNull();
   });
 });

@@ -7,6 +7,7 @@ const ValidationException = require('../error/ValidationException');
 const ForbidenException = require('../error/ForbidenException');
 const pagination = require('../middleware/pagination');
 const tokenAuthentication = require('../middleware/tokenAuthentication');
+const { deleteToken } = require('../auth/tokenService');
 
 const router = express.Router();
 
@@ -105,6 +106,10 @@ router.delete('/api/1.0/users/:id', tokenAuthentication, async (req, res, next) 
   }
 
   await deleteUser(req.params.id);
+
+  const { authorization } = req.headers;
+  const token = authorization.substring(7);
+  await deleteToken(token);
 
   res.send();
 });
