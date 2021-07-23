@@ -147,4 +147,14 @@ describe('Password Reset Request', () => {
 
     expect(response.status).toBe(502);
   });
+
+  const email_failure = 'E-mail failure.';
+  it(`Returns "${email_failure}" after email failure.`, async () => {
+    simulateSmtpFailure = true;
+
+    const user = await addUser();
+    const response = await postPasswordReset(user.email);
+
+    expect(response.body.message).toBe(email_failure);
+  });
 });
