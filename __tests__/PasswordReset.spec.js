@@ -1,6 +1,40 @@
 const request = require('supertest');
+const bcrypt = require('bcrypt');
 
 const app = require('../src/app');
+const User = require('../src/user/User');
+const sequelize = require('../src/config/database');
+
+beforeAll(async () => {
+  await sequelize.sync();
+});
+
+beforeEach(async () => {
+  // Clear user table
+
+  // Clear user table, sqlite specific
+  // await User.destroy({ truncate: true });
+
+  // Works for other mysql versions
+  await User.destroy({
+    truncate: {
+      cascade: true,
+    },
+  });
+});
+
+const addUser = async (user = { ...activeUser }) => {
+  const hash = await bcrypt.hash(user.password, 10);
+  user.password = hash;
+  return await User.create(user);
+};
+
+const activeUser = {
+  username: 'user1',
+  email: 'user1@mail.com',
+  password: 'password',
+  inactive: false,
+};
 
 const postPasswordReset = (email = 'user1@mail.com') => {
   const agent = request(app).post('/api/1.0/password-reset');
@@ -32,5 +66,30 @@ describe('Password Reset Request', () => {
 
     expect(response.body.validationErrors.email).toBe(email_invalid);
     expect(response.status).toBe(400);
+  });
+
+  it('Returns 200 OK when a password reset request is sent for known e-mail', async () => {
+    const user = await addUser();
+    const response = await postPasswordReset(user.email);
+    expect(response.status).toBe(200);
+  });
+
+  const password_reset_request_success = 'Check your email to reset your password.';
+  it(`Returns success response with message "${password_reset_request_success}" for known email for password reset.`, async () => {
+    const user = await addUser();
+    const response = await postPasswordReset(user.email);
+    expect(response.body.message).toBe(password_reset_request_success);
+  });
+
+  it('Creates a password reset token when a password reset request is sent for a known e-mail.', async () => {
+    const user = await addUser();
+    await postPasswordReset(user.email);
+    const userInDB = await User.findOne({
+      where: {
+        email: user.email,
+      },
+    });
+
+    expect(userInDB.passwordResetToken).toBeTruthy();
   });
 });

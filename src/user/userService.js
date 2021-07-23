@@ -106,4 +106,14 @@ const deleteUser = async (id) => {
   });
 };
 
-module.exports = { saveUser, findByEmail, activate, getUsers, getUser, updateUser, deleteUser };
+const passwordResetRequest = async (email) => {
+  const user = await findByEmail(email);
+  if (!user) {
+    throw new NotFoundException('E-mail not found.');
+  }
+
+  user.passwordResetToken = randomString(16);
+  await user.save();
+};
+
+module.exports = { saveUser, findByEmail, activate, getUsers, getUser, updateUser, deleteUser, passwordResetRequest };

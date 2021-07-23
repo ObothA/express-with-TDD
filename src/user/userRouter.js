@@ -2,11 +2,19 @@ const express = require('express');
 const { check, validationResult } = require('express-validator');
 
 // const User = require('./User');
-const { saveUser, findByEmail, activate, getUsers, getUser, updateUser, deleteUser } = require('./userService');
+const {
+  saveUser,
+  findByEmail,
+  activate,
+  getUsers,
+  getUser,
+  updateUser,
+  deleteUser,
+  passwordResetRequest,
+} = require('./userService');
 const ValidationException = require('../error/ValidationException');
 const ForbidenException = require('../error/ForbidenException');
 const pagination = require('../middleware/pagination');
-const NotFoundException = require('../error/NotFoundException');
 
 const router = express.Router();
 
@@ -109,13 +117,24 @@ router.delete('/api/1.0/users/:id', async (req, res, next) => {
   res.send();
 });
 
-router.post('/api/1.0/password-reset', check('email').isEmail().withMessage('E-mail is not valid.'), (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    throw new ValidationException(errors.array());
-  }
+router.post(
+  '/api/1.0/password-reset',
+  check('email').isEmail().withMessage('E-mail is not valid.'),
+  async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return next(new ValidationException(errors.array()));
+    }
 
-  throw new NotFoundException('E-mail not found.');
-});
+    try {
+      await passwordResetRequest(req.body.email);
+      return res.send({
+        message: 'Check your email to reset your password.',
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
 
 module.exports = router;
