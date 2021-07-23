@@ -11,11 +11,12 @@ const {
   updateUser,
   deleteUser,
   passwordResetRequest,
+  updatePassword,
+  findByPasswordResetToken,
 } = require('./userService');
 const ValidationException = require('../error/ValidationException');
 const ForbidenException = require('../error/ForbidenException');
 const pagination = require('../middleware/pagination');
-const User = require('./User');
 
 const router = express.Router();
 
@@ -139,11 +140,7 @@ router.post(
 );
 
 const passwordResetTokenValidator = async (req, res, next) => {
-  const user = await User.findOne({
-    where: {
-      passwordResetToken: req.body.passwordResetToken,
-    },
-  });
+  const user = await findByPasswordResetToken(req.body.passwordResetToken);
 
   if (!user) {
     return next(
@@ -170,6 +167,9 @@ router.put(
     if (!errors.isEmpty()) {
       return next(new ValidationException(errors.array()));
     }
+
+    await updatePassword(req.body);
+    res.send();
   }
 );
 

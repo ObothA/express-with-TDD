@@ -65,4 +65,12 @@ const scheduledCleanUp = () => {
   }, 60 * 60 * 1000);
 };
 
-module.exports = { createToken, verifyToken, deleteToken, deleteTokensOfUser, scheduledCleanUp };
+const clearTokens = async (userId) => {
+  Token.destroy({
+    where: {
+      userId,
+    },
+  });
+};
+
+module.exports = { createToken, verifyToken, deleteToken, deleteTokensOfUser, scheduledCleanUp, clearTokens };
