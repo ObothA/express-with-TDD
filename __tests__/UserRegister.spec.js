@@ -1,5 +1,6 @@
 const request = require('supertest');
 const { SMTPServer } = require('smtp-server');
+const config = require('config');
 
 const app = require('../src/app');
 const User = require('../src/user/User');
@@ -28,7 +29,7 @@ beforeAll(async () => {
     },
   });
 
-  await mailServer.listen(8587, 'localhost');
+  await mailServer.listen(config.mail.port, 'localhost');
 
   await sequelize.sync();
 });
