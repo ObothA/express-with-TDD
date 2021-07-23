@@ -15,6 +15,7 @@ const {
 const ValidationException = require('../error/ValidationException');
 const ForbidenException = require('../error/ForbidenException');
 const pagination = require('../middleware/pagination');
+const User = require('./User');
 
 const router = express.Router();
 
@@ -118,7 +119,7 @@ router.delete('/api/1.0/users/:id', async (req, res, next) => {
 });
 
 router.post(
-  '/api/1.0/password-reset',
+  '/api/1.0/user/password',
   check('email').isEmail().withMessage('E-mail is not valid.'),
   async (req, res, next) => {
     const errors = validationResult(req);
@@ -133,6 +134,41 @@ router.post(
       });
     } catch (err) {
       next(err);
+    }
+  }
+);
+
+const passwordResetTokenValidator = async (req, res, next) => {
+  const user = await User.findOne({
+    where: {
+      passwordResetToken: req.body.passwordResetToken,
+    },
+  });
+
+  if (!user) {
+    return next(
+      new ForbidenException('You are not authorized to update password. Please follow the password update steps again.')
+    );
+  }
+  next();
+};
+
+router.put(
+  '/api/1.0/user/password',
+  passwordResetTokenValidator,
+  check('password')
+    .notEmpty()
+    .withMessage('password cannot be null')
+    .bail()
+    .isLength({ min: 6 })
+    .withMessage('password must be at least 6 characters.')
+    .bail()
+    .matches(/^(?:(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).*)$/)
+    .withMessage('password must have at least 1 uppercase, 1 lowercase and 1 number.'),
+  async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return next(new ValidationException(errors.array()));
     }
   }
 );

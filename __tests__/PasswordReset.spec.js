@@ -69,10 +69,16 @@ const activeUser = {
 };
 
 const postPasswordReset = (email = 'user1@mail.com') => {
-  const agent = request(app).post('/api/1.0/password-reset');
+  const agent = request(app).post('/api/1.0/user/password');
   return agent.send({
     email,
   });
+};
+
+const putPasswordUpdate = (body = {}, options = {}) => {
+  const agent = request(app).put('/api/1.0/user/password');
+
+  return agent.send(body);
 };
 
 describe('Password Reset Request', () => {
@@ -87,7 +93,7 @@ describe('Password Reset Request', () => {
     const nowInMilliseconds = new Date().getTime();
     const response = await postPasswordReset();
 
-    expect(response.body.path).toBe('/api/1.0/password-reset');
+    expect(response.body.path).toBe('/api/1.0/user/password');
     expect(response.body.timestamp).toBeGreaterThan(nowInMilliseconds);
     expect(response.body.message).toBe(email_not_inuse);
   });
@@ -157,4 +163,76 @@ describe('Password Reset Request', () => {
 
     expect(response.body.message).toBe(email_failure);
   });
+});
+
+describe('Password update', () => {
+  it('Returns 403 when password update request does not have a valid password reset token', async () => {
+    const response = await putPasswordUpdate({
+      password: 'passowrd-reset',
+      passwordResetToken: 'abcd',
+    });
+    expect(response.status).toBe(403);
+  });
+
+  const unauthorized_password_reset =
+    'You are not authorized to update password. Please follow the password update steps again.';
+  it(`Returns error body with message "${unauthorized_password_reset}" after trying to update with invalid token`, async () => {
+    const nowInMilliseconds = new Date().getTime();
+    const response = await putPasswordUpdate({
+      password: 'passowrd-reset',
+      passwordResetToken: 'abcd',
+    });
+
+    expect(response.body.path).toBe('/api/1.0/user/password');
+    expect(response.body.timestamp).toBeGreaterThan(nowInMilliseconds);
+    expect(response.body.message).toBe(unauthorized_password_reset);
+  });
+
+  it('Returns 403 when password update request with invalid password pattern and reset token is invalid', async () => {
+    const response = await putPasswordUpdate({
+      password: 'not-valid',
+      passwordResetToken: 'abcd',
+    });
+    expect(response.status).toBe(403);
+  });
+
+  it('Returns 400 bad request when trying to update with invalid password and reset token is valid', async () => {
+    const user = await addUser();
+    user.passwordResetToken = 'test-token';
+    await user.save();
+
+    const response = await putPasswordUpdate({
+      password: 'not-valid',
+      passwordResetToken: 'test-token',
+    });
+    expect(response.status).toBe(400);
+  });
+
+  const password_null = 'password cannot be null';
+  const password_size = 'password must be at least 6 characters.';
+  const password_pattern = 'password must have at least 1 uppercase, 1 lowercase and 1 number.';
+  it.each`
+    field         | value              | expectedMessage
+    ${'password'} | ${null}            | ${password_null}
+    ${'password'} | ${'P4ssw'}         | ${password_size}
+    ${'password'} | ${'alllowercase'}  | ${password_pattern}
+    ${'password'} | ${'ALLUPPERCASE'}  | ${password_pattern}
+    ${'password'} | ${'12345678'}      | ${password_pattern}
+    ${'password'} | ${'lowerandUPPER'} | ${password_pattern}
+    ${'password'} | ${'lowerand12345'} | ${password_pattern}
+    ${'password'} | ${'UPPERAND12345'} | ${password_pattern}
+  `(
+    'Returns password validation error $expectedMessage when $field is $value',
+    async ({ field, expectedMessage, value }) => {
+      const user = await addUser();
+      user.passwordResetToken = 'test-token';
+      await user.save();
+
+      const response = await putPasswordUpdate({
+        password: value,
+        passwordResetToken: 'test-token',
+      });
+      expect(response.body.validationErrors.password).toBe(expectedMessage);
+    }
+  );
 });
