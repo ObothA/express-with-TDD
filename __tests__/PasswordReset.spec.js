@@ -1,16 +1,43 @@
 const request = require('supertest');
 const bcrypt = require('bcrypt');
+const { SMTPServer } = require('smtp-server');
 
 const app = require('../src/app');
 const User = require('../src/user/User');
 const sequelize = require('../src/config/database');
 
+let lastMail, mailServer;
+let simulateSmtpFailure = false;
+
 beforeAll(async () => {
+  mailServer = new SMTPServer({
+    authOptional: true,
+    onData(stream, session, callback) {
+      let mailBody;
+      stream.on('data', (data) => {
+        mailBody += data.toString();
+      });
+      stream.on('end', () => {
+        if (simulateSmtpFailure) {
+          const err = new Error('Invalid mailbox');
+          err.ResponseCode = 553;
+          return callback(err);
+        }
+        lastMail = mailBody;
+        callback();
+      });
+    },
+  });
+
+  await mailServer.listen(8587, 'localhost');
+
   await sequelize.sync();
 });
 
 beforeEach(async () => {
-  // Clear user table
+  simulateSmtpFailure = false;
+
+  /** Clear the table before each test */
 
   // Clear user table, sqlite specific
   // await User.destroy({ truncate: true });
@@ -21,6 +48,10 @@ beforeEach(async () => {
       cascade: true,
     },
   });
+});
+
+afterAll(async () => {
+  await mailServer.close();
 });
 
 const addUser = async (user = { ...activeUser }) => {
@@ -91,5 +122,19 @@ describe('Password Reset Request', () => {
     });
 
     expect(userInDB.passwordResetToken).toBeTruthy();
+  });
+
+  it('Sends a password reset email with password reset token.', async () => {
+    const user = await addUser();
+    await postPasswordReset(user.email);
+    const userInDB = await User.findOne({
+      where: {
+        email: user.email,
+      },
+    });
+
+    const passwordResetToken = userInDB.passwordResetToken;
+    expect(lastMail).toContain('user1@mail.com');
+    expect(lastMail).toContain(passwordResetToken);
   });
 });

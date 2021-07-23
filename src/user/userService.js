@@ -2,7 +2,7 @@ const bcrypt = require('bcrypt');
 const Sequelize = require('sequelize');
 
 const User = require('./User');
-const { sendAccountActivation } = require('../email/EmailService');
+const { sendAccountActivation, sendPasswordReset } = require('../email/EmailService');
 const sequelize = require('../config/database');
 const EmailException = require('../email/EmailException');
 const InvalidTokenException = require('./invalidTokenException');
@@ -114,6 +114,8 @@ const passwordResetRequest = async (email) => {
 
   user.passwordResetToken = randomString(16);
   await user.save();
+
+  await sendPasswordReset(email, user.passwordResetToken);
 };
 
 module.exports = { saveUser, findByEmail, activate, getUsers, getUser, updateUser, deleteUser, passwordResetRequest };
