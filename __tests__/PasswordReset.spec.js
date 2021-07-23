@@ -138,4 +138,13 @@ describe('Password Reset Request', () => {
     expect(lastMail).toContain('user1@mail.com');
     expect(lastMail).toContain(passwordResetToken);
   });
+
+  it('Returns 502 bad gateway when sending email fails.', async () => {
+    simulateSmtpFailure = true;
+
+    const user = await addUser();
+    const response = await postPasswordReset(user.email);
+
+    expect(response.status).toBe(502);
+  });
 });
